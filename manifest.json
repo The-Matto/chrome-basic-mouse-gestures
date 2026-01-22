@@ -13,6 +13,17 @@
         "storage",
         "tabs"
     ],
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "source/overlayWidget.html",
+                "widget.css"
+            ],
+            "matches": [
+                "<all_urls>"
+            ]
+        }
+    ],
     "background": {
         "service_worker": "source/background.js"
     },
@@ -27,7 +38,10 @@
             "css": [
                 "source/styles.css"
             ],
-            "run_at": "document_idle"
+            "html": [
+                "source/overlayWidget.html"
+            ],
+            "run_at": "document_start"
         }
     ]
 }

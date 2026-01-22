@@ -72,9 +72,12 @@ const Directions = {
 }
 
 let createdWidget;
+
 const overlayWidget = {
     createdWidget: null,
-    createWidget: () => {
+    overlayText: null,
+    overlayDiv: null,
+    createWidget: async () => {
         const { x, y } = startMousePos;
 
         //TODO Fix this magic number
@@ -84,41 +87,40 @@ const overlayWidget = {
         //Only allowing one instance of the overlay widget
         if (createdWidget) {
 
-            createdWidget.style.top = posY + "px";
-            createdWidget.style.left = posX + "px";
+            overlayDiv.style.top = posY + "px";
+            overlayDiv.style.left = posX + "px";
+
             overlayWidget.setShowOverlay(false);
             return;
         }
 
         createdWidget = document.createElement('div');
 
+        const htmlUrl = chrome.runtime.getURL("source/overlayWidget.html");
+        const response = await fetch(htmlUrl);
+        const htmlText = await response.text();
 
-
-        createdWidget.style.position = 'fixed';
-        createdWidget.style.top = posY + "px";
-        createdWidget.style.left = posX + "px";
-
-        createdWidget.style.zIndex = '5000';
-        createdWidget.style.width = widgetWidth + 'px';
-        createdWidget.style.height = 'auto';
-        createdWidget.style.backgroundColor = 'black';
-        createdWidget.style.color = 'white';
-        createdWidget.style.padding = '8px';
-        createdWidget.style.textAlign = 'center';
-        createdWidget.style.fontFamily = "Arial, sans-serif";
-        createdWidget.style.fontSize = "15px";
-
-        createdWidget.textContent = 'None';
+        createdWidget.innerHTML = htmlText;
 
         overlayWidget.setShowOverlay(false);
 
+
         document.documentElement.appendChild(createdWidget);
+
+        overlayText = document.getElementById("overlay-text");
+        overlayDiv = document.getElementById("overlay");
+
+        overlayDiv.style.top = posY + "px";
+        overlayDiv.style.left = posX + "px";
+
     },
-    setWidgetText: (inText) => {
+
+    setWidgetText: async (inText) => {
         if (createdWidget) {
-            createdWidget.textContent = inText;
+            overlayText.textContent = inText;
         }
     },
+
     setShowOverlay: (shouldShow) => {
         if (createdWidget) {
             createdWidget.style.display = shouldShow ? 'block' : 'none';
