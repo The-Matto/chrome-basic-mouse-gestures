@@ -1,0 +1,29 @@
+{
+    "name": "Matto - Chrome Mouse Gestures",
+    "description": "Adds basic mouse gestures, one for each cardinal direction",
+    "version": "1.0",
+    "manifest_version": 3,
+    "icons": {
+        "128": "icons/icon128.png"
+    },
+    "permissions": [
+        "tabs"
+    ],
+    "background": {
+        "service_worker": "source/background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "source/content.js"
+            ],
+            "css": [
+                "source/styles.css"
+            ],
+            "run_at": "document_idle"
+        }
+    ]
+}
