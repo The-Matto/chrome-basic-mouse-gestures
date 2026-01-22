@@ -6,7 +6,11 @@
     "icons": {
         "128": "icons/icon128.png"
     },
+    "action": {
+        "default_popup": "source/popup.html"
+    },
     "permissions": [
+        "storage",
         "tabs"
     ],
     "background": {

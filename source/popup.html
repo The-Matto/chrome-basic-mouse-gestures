@@ -1,0 +1,24 @@
+<html>
+
+<head>
+    <title>Matto - Mouse Gestures config</title>
+</head>
+
+<body>
+    <div style="display: flex; align-items: center; gap: 10px;">
+        <label for="activate-value">Activate value</label>
+        <input type="range" id="activate-value" name="activate-value" min="10" max="500" step="5" value="100">
+        <span id="activateRange-value">50</span>
+    </div>
+
+    <!-- TODO Ensure that this value cannot be higher than activate-value -->
+    <div style="display: flex; align-items: center; gap: 10px;">
+        <label for="activate-value">Off axis allowance</label>
+        <input type="range" id="activate-value" name="activate-value" min="0" max="100" step="5" value="20">
+        <span id="activateRange-value">50</span>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+
+</html>
