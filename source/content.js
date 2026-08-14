@@ -1,10 +1,23 @@
 
 
 const Directions = {
+    FARUP: {
+        actionName: "Restore Tab",
+        calculateDirection: ({ x, y }) => {
+            return (y > +gestureActivateThreshold + farActivator
+                && Math.abs(x) < gestureOtherAxisAllowance);
+        },
+        activate: () => {
+            console.log("Matto - Restore Tab");
+            chrome.runtime.sendMessage({ action: "RESTORE_TAB" });
+            return true;
+        },
+
+    },
     UP: {
         actionName: "Close Tab",
         calculateDirection: ({ x, y }) => {
-            return (y > gestureActivateThreshold
+            return (y > gestureActivateThreshold && y < (+gestureActivateThreshold + farActivator)
                 && Math.abs(x) < gestureOtherAxisAllowance);
         },
         activate: () => {
@@ -57,6 +70,7 @@ const Directions = {
 
     },
 
+
     CANCEL: {
         actionName: "Cancel",
         calculateDirection: ({ x, y }) => {
@@ -72,11 +86,14 @@ const Directions = {
 }
 
 let createdWidget;
+let overlayText = null;
+let overlayDiv = null;
+let overlayRecentTabs = null;
+let shadowRoot = null;
+let activeHoveredItem = null;
 
 const overlayWidget = {
-    createdWidget: null,
-    overlayText: null,
-    overlayDiv: null,
+
     createWidget: async () => {
         const { x, y } = startMousePos;
 
@@ -104,19 +121,81 @@ const overlayWidget = {
 
         overlayWidget.setShowOverlay(false);
 
+        const host = document.createElement('div');
+        host.id = 'my-extension-root';
+        host.style.display = 'block';
+        host.style.position = 'none';
+        document.body.appendChild(host);
 
-        document.documentElement.appendChild(createdWidget);
+        shadowRoot = host.attachShadow({ mode: 'open' });
+        shadowRoot.appendChild(createdWidget);
 
-        overlayText = document.getElementById("overlay-text");
-        overlayDiv = document.getElementById("overlay");
+        overlayText = shadowRoot.getElementById("overlay-text");
+        overlayDiv = shadowRoot.getElementById("overlay");
+        overlayTestDiv = shadowRoot.getElementById("overlay-test");
+        overlayRecentTabs = shadowRoot.getElementById("recent-tabs-list");
+
+        overlayWidget.addRecentTabs()
+
+
 
         overlayDiv.style.top = posY + "px";
         overlayDiv.style.left = posX + "px";
 
     },
+    addRecentTabs: async () => {
+
+        //TODO - Disabled this until I make tabs
+        return;
+
+        const template = shadowRoot.getElementById('template-list-item');
+
+        chrome.storage.local.get(['recentTabs'], (result) => {
+            if (result.recentTabs) {
+                //Start at elem 1 to skip the active tab
+                for (let i = 1; i <= 5; i++) {
+
+                    const tab = result.recentTabs[i];
+
+                    if (!tab)
+                        return;
+
+                    //TODO Load storage of recent tabs, loop them
+                    const node = template.content.cloneNode(true);
+                    const rootElement = node.firstElementChild;
+                    rootElement.id = 'recent-tab-' + tab.tabId;
+                    rootElement.dataset.tabId = tab.tabId;
+                    const textElem = node.firstElementChild;
+
+                    overlayRecentTabs.appendChild(rootElement);
+                   
+                    textElem.textContent = tab.tabName;
+
+
+
+                    rootElement.addEventListener('pointerenter', (e) => {
+                        console.log("Mouse ENTER");
+                        const tabId = e.currentTarget.dataset.tabId;
+                        activeHoveredItem = tabId;
+
+
+                    });
+                    rootElement.addEventListener('pointerleave', (e) => {
+                        activeHoveredItem = null;
+
+                        console.log("Mouse LEAVE");
+                    });
+
+                }
+            }
+        });
+
+
+
+    },
 
     setWidgetText: async (inText) => {
-        if (createdWidget) {
+        if (createdWidget && overlayText) {
             overlayText.textContent = inText;
         }
     },
@@ -137,6 +216,7 @@ let startMousePos;
 
 let gestureActivateThreshold = 100;
 let gestureOtherAxisAllowance = 20;
+const farActivator = 100;
 
 let isHoldingMouseTwo = false;
 
@@ -218,6 +298,11 @@ document.addEventListener('contextmenu', (event) => {
     const normalisedMouseX = startMousePos.x - event.x;
     const normalisedMouseY = startMousePos.y - event.y;
 
+    if (activeHoveredItem) {
+        event.preventDefault();
+        chrome.runtime.sendMessage({ action: "OPEN_TAB", tabId: activeHoveredItem });
+        return;
+    }
     const activeLogic = Object.values(Directions).find(direction =>
         direction.calculateDirection({ x: normalisedMouseX, y: normalisedMouseY }));
 
